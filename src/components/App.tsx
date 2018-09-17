@@ -12,12 +12,43 @@ export class App extends React.Component<{}, IState> {
     e.preventDefault();
     this.setState({
       currentTask: '',
-      tasks: [...this.state.tasks, this.state.currentTask]
+      tasks: [
+        ...this.state.tasks,
+        {
+          id: this._timeInMilliseconds(),
+          value: this.state.currentTask,
+          completed: false
+        }
+      ]
     });
   }
+
+  public deleteTask(id: number): void {
+    const filteredTask: Array<ITask> = this.state.tasks.filter(
+      (task: ITask) => task.id !== id
+    );
+    this.setState({ tasks: filteredTask });
+  }
+
+  public toggleDone(index: number): void {
+    let task: ITask[] = this.state.tasks.splice(index, 1);
+    task[0].completed = !task[0].completed;
+    // debugger;
+    const currentTask: ITask[] = [...this.state.tasks, ...task];
+    this.setState({ tasks: currentTask });
+  }
+
   public renderTasks(): JSX.Element[] {
-    return this.state.tasks.map((task: string, index: number) => (
-      <div key={index}>{task}</div>
+    return this.state.tasks.map((task: ITask, index: number) => (
+      <div key={task.id} className="tdl-task">
+        <span className={task.completed ? 'is-completed' : ''}>
+          {task.value}
+        </span>
+        <button onClick={() => this.deleteTask(task.id)}>Delete</button>
+        <button onClick={() => this.toggleDone(index)}>
+          {task.completed ? 'Undo' : 'Done'}
+        </button>
+      </div>
     ));
   }
 
@@ -29,6 +60,7 @@ export class App extends React.Component<{}, IState> {
         <form onSubmit={e => this.handleSubmit(e)}>
           <input
             type="text"
+            className="tdl-input"
             placeholder="Add a Task"
             value={this.state.currentTask}
             onChange={e => this.setState({ currentTask: e.target.value })}
@@ -39,9 +71,20 @@ export class App extends React.Component<{}, IState> {
       </div>
     );
   }
+
+  private _timeInMilliseconds(): number {
+    const date: Date = new Date();
+    return date.getTime();
+  }
 }
 
 interface IState {
   currentTask: string;
-  tasks: Array<string>;
+  tasks: Array<ITask>;
+}
+
+interface ITask {
+  id: number;
+  value: string;
+  completed: boolean;
 }
